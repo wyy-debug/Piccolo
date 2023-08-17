@@ -44,7 +44,11 @@ namespace Piccolo
         m_pick_pass->setCommonInfo(pass_common_info);
         m_fxaa_pass->setCommonInfo(pass_common_info);
         m_particle_pass->setCommonInfo(pass_common_info);
-
+        //初始化Pass
+        // 设置描述符集布局对象
+        // 设置渲染管线(加载shader)
+        // 创建描述符集对象 -- 绑定资源到描述集符
+        // 更新描述符集 -- 绑定资源到描述集符
         m_point_light_shadow_pass->initialize(nullptr);
         m_directional_light_pass->initialize(nullptr);
 
@@ -180,7 +184,8 @@ namespace Piccolo
         {
             return;
         }
-
+        //绑定描述集到命令缓冲区
+        //渲染
         static_cast<DirectionalLightShadowPass*>(m_directional_light_pass.get())->draw();
 
         static_cast<PointLightShadowPass*>(m_point_light_shadow_pass.get())->draw();

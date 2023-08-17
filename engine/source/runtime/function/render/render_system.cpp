@@ -26,27 +26,32 @@ namespace Piccolo
     {
         clear();
     }
-
+    //引擎初始化调用
     void RenderSystem::initialize(RenderSystemInitInfo init_info)
     {
+        //g_runtime_global_context 全局变量
         std::shared_ptr<ConfigManager> config_manager = g_runtime_global_context.m_config_manager;
         ASSERT(config_manager);
         std::shared_ptr<AssetManager> asset_manager = g_runtime_global_context.m_asset_manager;
         ASSERT(asset_manager);
 
         // render context initialize
+        //渲染上下文初始化
         RHIInitInfo rhi_init_info;
         rhi_init_info.window_system = init_info.window_system;
 
         m_rhi = std::make_shared<VulkanRHI>();
+        //vulkan初始化
         m_rhi->initialize(rhi_init_info);
 
         // global rendering resource
+        //全局渲染资源
         GlobalRenderingRes global_rendering_res;
         const std::string& global_rendering_res_url = config_manager->getGlobalRenderingResUrl();
         asset_manager->loadAsset(global_rendering_res_url, global_rendering_res);
 
         // upload ibl, color grading textures
+        //上次光照，色彩分级贴图
         LevelResourceDesc level_resource_desc;
         level_resource_desc.m_ibl_resource_desc.m_skybox_irradiance_map = global_rendering_res.m_skybox_irradiance_map;
         level_resource_desc.m_ibl_resource_desc.m_skybox_specular_map   = global_rendering_res.m_skybox_specular_map;
@@ -58,6 +63,7 @@ namespace Piccolo
         m_render_resource->uploadGlobalRenderResource(m_rhi, level_resource_desc);
 
         // setup render camera
+        // 设置渲染摄像头
         const CameraPose& camera_pose = global_rendering_res.m_camera_config.m_pose;
         m_render_camera               = std::make_shared<RenderCamera>();
         m_render_camera->lookAt(camera_pose.m_position, camera_pose.m_target, camera_pose.m_up);
@@ -67,6 +73,7 @@ namespace Piccolo
                                    global_rendering_res.m_camera_config.m_aspect.y);
 
         // setup render scene
+        //设置渲染场景
         m_render_scene                  = std::make_shared<RenderScene>();
         m_render_scene->m_ambient_light = {global_rendering_res.m_ambient_light.toVector3()};
         m_render_scene->m_directional_light.m_direction =
@@ -75,15 +82,19 @@ namespace Piccolo
         m_render_scene->setVisibleNodesReference();
 
         // initialize render pipeline
+        //初始化渲染管线
         RenderPipelineInitInfo pipeline_init_info;
         pipeline_init_info.enable_fxaa     = global_rendering_res.m_enable_fxaa;
         pipeline_init_info.render_resource = m_render_resource;
 
         m_render_pipeline        = std::make_shared<RenderPipeline>();
         m_render_pipeline->m_rhi = m_rhi;
+        //初始化渲染管线
+        //初始化各种pass
         m_render_pipeline->initialize(pipeline_init_info);
 
         // descriptor set layout in main camera pass will be used when uploading resource
+        // 上传资源时将使用主摄像头通道中的描述符集布局
         std::static_pointer_cast<RenderResource>(m_render_resource)->m_mesh_descriptor_set_layout =
             &static_cast<RenderPass*>(m_render_pipeline->m_main_camera_pass.get())
                  ->m_descriptor_infos[MainCameraPass::LayoutType::_per_mesh]
@@ -97,24 +108,30 @@ namespace Piccolo
     void RenderSystem::tick(float delta_time)
     {
         // process swap data between logic and render contexts
+        //处理逻辑和渲染上下文之间的交换数据
         processSwapData();
 
         // prepare render command context
+        //准备渲染命令上下文
         m_rhi->prepareContext();
 
         // update per-frame buffer
+        // 更新下一帧缓冲
         m_render_resource->updatePerFrameBuffer(m_render_scene, m_render_camera);
 
         // update per-frame visible objects
+        // 更新下一帧可见物体
         m_render_scene->updateVisibleObjects(std::static_pointer_cast<RenderResource>(m_render_resource),
                                              m_render_camera);
 
         // prepare pipeline's render passes data
+        // 准备管线渲染passes数据
         m_render_pipeline->preparePassData(m_render_resource);
 
         g_runtime_global_context.m_debugdraw_manager->tick(delta_time);
 
         // render one frame
+        // 渲染一帧
         if (m_render_pipeline_type == RENDER_PIPELINE_TYPE::FORWARD_PIPELINE)
         {
             m_render_pipeline->forwardRender(m_rhi, m_render_resource);
@@ -255,6 +272,7 @@ namespace Piccolo
         ASSERT(asset_manager);
 
         // TODO: update global resources if needed
+        // 如果需要，请更新全局资源
         if (swap_data.m_level_resource_desc.has_value())
         {
             m_render_resource->uploadGlobalRenderResource(m_rhi, *swap_data.m_level_resource_desc);
@@ -264,6 +282,7 @@ namespace Piccolo
         }
 
         // update game object if needed
+        // 如果需要的话更新go
         if (swap_data.m_game_object_resource_desc.has_value())
         {
             while (!swap_data.m_game_object_resource_desc->isEmpty())
@@ -310,6 +329,7 @@ namespace Piccolo
                     }
 
                     // material properties
+                    // 材质属性
                     MaterialSourceDesc material_source;
                     if (game_object_part.m_material_desc.m_with_texture)
                     {

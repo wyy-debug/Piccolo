@@ -10,6 +10,10 @@
 
 namespace Piccolo
 {
+    //设置描述符集布局对象
+    //设置渲染管线(加载shader)
+    //创建描述符集对象 -- 绑定资源到描述集符
+    //更新描述符集 -- 绑定资源到描述集符
     void ColorGradingPass::initialize(const RenderPassInitInfo* init_info)
     {
         RenderPass::initialize(nullptr);
@@ -247,7 +251,7 @@ namespace Piccolo
                                     0,
                                     NULL);
     }
-
+    //绑定描述集到命令缓冲区
     void ColorGradingPass::draw()
     {
         float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };

@@ -126,31 +126,31 @@ namespace Piccolo
 #else
 #error Unknown Compiler
 #endif
-
+        //创建Vulkan实例
         createInstance();
-
+        //初始化调试层
         initializeDebugMessenger();
-
+        //创建窗口表面
         createWindowSurface();
-
+        //初始化物理设备
         initializePhysicalDevice();
-
+        //创建逻辑设备
         createLogicalDevice();
-
+        //创建命令缓冲池
         createCommandPool();
-
+        //创建命令缓冲
         createCommandBuffers();
-
+        //创建描述集符池
         createDescriptorPool();
-
+        //创建同步
         createSyncPrimitives();
-
+        //创建交换链
         createSwapchain();
-
+        //创建交换视图
         createSwapchainImageViews();
-
+        //创建帧缓冲视图
         createFramebufferImageAndView();
-
+        //创建资源内存分配器
         createAssetAllocator();
     }
 
